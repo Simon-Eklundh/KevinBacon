@@ -3,32 +3,30 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Locale;
 
-public class KevinBacon{
+public class KevinBacon {
+	private static final String KEVIN_BACON = "bacon, kevin (i)";
 	private final UndirectedGraph<String> graph = new UndirectedGraph<>();
 
-	public KevinBacon(){
+	public KevinBacon() {
 		getData();
 	}
 
-	private void getData(){
-		try {
-			BufferedReader br = Files.newBufferedReader(Path.of("movieDataSmall.txt"));
-
+	private void getData() {
+		try (BufferedReader br = Files.newBufferedReader(Path.of("movieDataSmall.txt"))) {
 			String lastActor = null;
 			String line;
-			while((line = br.readLine()) != null){
-				if(line.charAt(1) == 'a'){
+			while ((line = br.readLine()) != null) {
+				if (line.charAt(1) == 'a') {
 					line = formatLine(line);
 					graph.add(line);
 					lastActor = line;
 					System.out.println("Actor: " + line);
-				}else if(line.charAt(1) == 't'){
-					line = formatLine(line);
-					graph.add(line);
-					graph.connect(lastActor, line, 1);
-					System.out.println("Movie: " + line);
+				} else if (line.charAt(1) == 't') {
+					String movie = formatLine(line);
+					graph.add(movie);
+					graph.connect(lastActor, movie, 1);
+					System.out.println("Movie: " + movie);
 				}
 			}
 		} catch (IOException e) {
@@ -36,29 +34,26 @@ public class KevinBacon{
 			e.printStackTrace();
 		}
 	}
-	
-	public void printBaconNumber(String actor){
-		System.out.println(graph.toString());
-		actor = formatLine(actor);
 
-		if(actor.equals("bacon kevin")){
-			System.out.println("Bacon Kevin is 0 steps away from Bacon Kevin.");
-			return;
-		}else if(graph.add(actor)){
+	private String formatLine(String line) {
+		line = line.substring(3);
+		line = line.trim().toLowerCase();
+		return line;
+	}
+
+	public void printBaconNumber(String actor) {
+		System.out.println(graph);
+
+
+		if (!graph.contains(actor)) {
 			System.out.println("Error: Actor doesn't exist!");
 			return;
 		}
 
-		List<String> path = graph.breadthFirstSearch(actor, "bacon kevin");
-		
-		System.out.println(actor + " is " + path.size() + " steps away from Kevin Bacon.");
-		System.out.println("Path: " + path);
-	}
+		List<String> path = graph.breadthFirstSearch(actor, KEVIN_BACON);
 
-	private String formatLine(String line){
-		line = line.substring(3);
-		line = line.trim().toLowerCase();
-		return line;
+		System.out.println(actor + " is " + path.size() / 2 + " steps away from Kevin Bacon.");
+		System.out.println("Path: " + path);
 	}
 
 	/*
