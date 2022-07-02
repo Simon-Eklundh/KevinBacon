@@ -1,13 +1,17 @@
-public class Main{
+public class Main {
 	/*
 	Kevin Bacon game.
 	A program which asks for the name of an actor, and then calculates and prints said actor's bacon number.
 	*/
-	
-	public static void main(String[] args){
+
+	public static void main(String[] args) {
 		programLoop();
 	}
-	public static void programLoop(){
+
+	/**
+	 * Program loop. Runs until the user quits.
+	 */
+	public static void programLoop() {
 		InputManager input = new InputManager();
 		KevinBacon kb = new KevinBacon();
 

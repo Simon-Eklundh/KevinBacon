@@ -1,60 +1,97 @@
-import java.util.*;
+import javafx.util.Pair;
+
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Queue;
 
 public class UndirectedGraph<T> {
-	// Nodes and what they're connected to
-	private final HashMap<T, ArrayList<T>> graph = new HashMap<>();
+	// Nodes and what they're connected to; node -> name of edge -> node
+	private final HashMap<T, HashMap<String, T>> graph = new HashMap<>();
 
-
-	public boolean add(T nodeValue) {
-		if (graph.containsKey(nodeValue)) return false;
-		graph.put(nodeValue, new ArrayList<>());
-		return true;
+	/**
+	 * Adds a node to the graph
+	 *
+	 * @param nodeValue
+	 */
+	public void addNode(T nodeValue) {
+		graph.putIfAbsent(nodeValue, new HashMap<>());
 	}
 
-	public void connect(T nodeOne, T nodeTwo, int i) {
-		graph.get(nodeOne).add(nodeTwo);
-		graph.get(nodeTwo).add(nodeOne);
+	/**
+	 * Adds an edge to the graph
+	 *
+	 * @param nodeOne
+	 * @param nodeTwo
+	 * @param label
+	 */
+	public void connect(T nodeOne, T nodeTwo, String label) {
+		graph.get(nodeOne).putIfAbsent(label, nodeTwo);
+		graph.get(nodeTwo).putIfAbsent(label, nodeOne);
 	}
 
-	public List<T> breadthFirstSearch(T start, T end) {
-		System.out.println(start);
-		System.out.println(end);
-		if (!graph.containsKey(start) || !graph.containsKey(end)) throw new IllegalStateException();
+	/**
+	 * finds a path between start and end and returns it as a pair of a string and the amount of nodes
+	 *
+	 * @param start the node to start from
+	 * @param end   the node to end at
+	 * @return a pair of a string and the amount of nodes
+	 */
+	public Pair<String, Integer> breadthFirstSearch(T start, T end) {
 
-		if (start.equals(end)) return new LinkedList<>();
-		// backwards
-		HashMap<T, T> path = new HashMap<>();
-		Queue<T> frontier = new LinkedList<>();
+		if (!graph.containsKey(start) || !graph.containsKey(end))
+			throw new IllegalArgumentException("Start or end node not in graph");
 
-		frontier.add(start);
-		T current = null;
-		while (true) {
-			T last = current;
-			current = frontier.poll();
-			path.put(current, last);
-			ArrayList<T> neighbours = graph.get(current);
-			for (T node :
-					neighbours) {
-				if (node.equals(end)) {
-					path.put(node, current);
-					return pathCreator(path, end);
+		HashMap<T, Pair<String, T>> path = new HashMap<>();
+		if (start.equals(end)) return new Pair<>(start.toString(), 0);
+		Queue<T> queue = new LinkedList<>();
+		queue.add(start);
+		path.put(start, new Pair<>("", null));
+		T current;
+		while (!queue.isEmpty()) {
+			current = queue.remove();
+			// path.put(current, new Pair<>(path.get(previous).getKey(), previous));
+			if (current.equals(end)) break;
+			for (Map.Entry<String, T> entry : graph.get(current).entrySet()) {
+				if (!path.containsKey(entry.getValue())) {
+					queue.add(entry.getValue());
+					path.put(entry.getValue(), new Pair<>(entry.getKey(), current));
+
 				}
-				if (path.containsKey(node)) continue;
-				frontier.add(node);
 			}
 
 		}
+		return pathCreator(path, end);
 	}
 
-	private List<T> pathCreator(HashMap<T, T> path, T end) {
-		LinkedList<T> finalPath = new LinkedList<>();
-		T node = path.get(end);
-		finalPath.add(end);
-		while (node != null) {
-			finalPath.add(0, node);
-			node = path.get(node);
-		}
-		return finalPath;
+	/**
+	 * creates a string version of the path and returns it together with the amount of nodes in the path
+	 *
+	 * @param path the path to create a string of
+	 * @param end  the end node of the path
+	 * @return a pair of a string and the amount of nodes
+	 */
+	private Pair<String, Integer> pathCreator(HashMap<T, Pair<String, T>> path, T end) {
+		StringBuilder finalPath = new StringBuilder();
+		Integer count = 0;
+		String movie;
+		T node = end;
+
+		finalPath.append(end);
+
+		do {
+			count++;
+			movie = path.get(node).getKey();
+			node = path.get(node).getValue();
+			finalPath.insert(0, " -> ");
+			finalPath.insert(0, movie);
+			finalPath.insert(0, " -> ");
+			finalPath.insert(0, node);
+
+
+		} while (!path.get(node).getKey().equals("") && path.get(node).getValue() != null);
+
+		return new Pair<>(finalPath.toString(), count);
 	}
 
 	public boolean contains(T actor) {
